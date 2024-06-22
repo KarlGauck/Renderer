@@ -54,6 +54,19 @@ function linkGLFW()
 end
 
 
+function includeGLAD()
+    includedirs "Libraries/GLAD/include"
+end
+
+function linkGLAD()
+    libdirs "Libraries/GLAD/src"
+
+    filter "kind: not StaticLib"
+        links "glfw3"
+    filter {}
+end
+
+
 -- Our first project, the static library
 project "ExampleLib"
 	-- kind is used to indicate the type of this project.
@@ -82,6 +95,20 @@ function useExampleLib()
 end
 
 
+project "GLAD"
+    kind "StaticLib"
+    files "Libraries/GLAD/**"
+
+    includeGLAD()
+    linkGLAD()
+
+function useGLAD()
+    includedirs "Libraries/GLAD"
+    links "GLAD"
+    includeGLAD()
+    linkGLAD()
+
+end
 
 -- The windowed app
 project "App"
@@ -101,10 +128,22 @@ project "App"
 	filter { "system:not windows" }
 		links { "GL" }
 
+
+function includeLinmath()
+    includedirs "Libraries/Linmath/Include"
+end
+
+
 project "Renderer"
     kind "ConsoleApp"
     files "Projects/Renderer/**"
 
+    includedirs { "Projects/Renderer", "Libraries/GLAD" }
+    useGLAD()
+
+    includeLinmath()
+
+    includeGLFW()
     linkGLFW()
 
     filter "system:windows"

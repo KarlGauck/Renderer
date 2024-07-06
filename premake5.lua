@@ -38,12 +38,16 @@ function linkGLAD()
 	filter({})
 end
 
+function useStbImage()
+  includedirs "Projects/stbImage"
+end
+
 -- Our first project, the static library
 project("ExampleLib")
-kind("StaticLib")
-files("Projects/ExampleLib/**")
+  kind("StaticLib")
+  files("Projects/ExampleLib/**")
 
-includeGLFW()
+  includeGLFW()
 
 function useExampleLib()
 	includedirs("Projects/ExampleLib")
@@ -91,6 +95,8 @@ files("Projects/Renderer/**")
 
 includedirs({ "Projects/Renderer", "Libraries/GLAD" })
 useGLAD()
+
+useStbImage()
 
 includeLinmath()
 

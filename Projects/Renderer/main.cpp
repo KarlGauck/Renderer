@@ -2,45 +2,43 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
  
-#include "linmath.h"
- 
 #include <stdlib.h>
 #include <stdio.h>
+#include <iostream>
+
+#include "linmath.h"
+#include "files.h"
  
-static const struct
-{
-    float x, y;
-    float r, g, b;
-} vertices[3] =
-{
-    { -0.6f, -0.4f, 1.f, 0.f, 0.f },
-    {  0.6f, -0.4f, 0.f, 1.f, 0.f },
-    {   0.f,  0.6f, 0.f, 0.f, 1.f }
-};
- 
-static const char* vertex_shader_text =
-"#version 110\n"
-"uniform mat4 MVP;\n"
-"attribute vec3 vCol;\n"
-"attribute vec2 vPos;\n"
-"varying vec3 color;\n"
-"void main()\n"
-"{\n"
-"    gl_Position = MVP * vec4(vPos, 0.0, 1.0);\n"
-"    color = vCol;\n"
-"}\n";
- 
-static const char* fragment_shader_text =
-"#version 110\n"
-"varying vec3 color;\n"
-"void main()\n"
-"{\n"
-"    gl_FragColor = vec4(color, 1.0);\n"
-"}\n";
  
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
+}
+
+static void shaderCompilationDebug(unsigned int shader)
+{
+    int success;
+    char infoLog[512];
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+
+    if (!success)
+    {
+        glGetShaderInfoLog(shader, 512, NULL, infoLog);
+        std::cout << "Error during shader compilation:\n" << infoLog << std::endl;
+    }
+}
+
+static void programLinkingDebug(unsigned int program)
+{
+    int success;
+    char infoLog[512];
+    glGetProgramiv(program, GL_LINK_STATUS, &success);
+
+    if (!success)
+    {
+        glGetProgramInfoLog(program, 512, NULL, infoLog);
+        std::cout << "Error during program linking:\n" << infoLog << std::endl;
+    }
 }
  
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -52,9 +50,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 int main(void)
 {
     GLFWwindow* window;
-    unsigned int vertex_buffer, vertex_shader, fragment_shader, program;
-    unsigned int mvp_location, vpos_location, vcol_location;
-
     glfwSetErrorCallback(error_callback);
 
     if (!glfwInit())
@@ -76,59 +71,66 @@ int main(void)
     gladLoadGL();
     glfwSwapInterval(1);
 
-    // NOTE: OpenGL error checks have been omitted for brevity
+    float vertices[] = {
+     -0.5f, -0.5f, 0.0f,
+      0.5f, -0.5f, 0.0f,
+      0.0f,  0.5f, 0.0f
+    };
 
-    glGenBuffers(1, &vertex_buffer);
-    glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+    unsigned int vbo;
+    glGenBuffers(1, &vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    vertex_shader = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex_shader, 1, &vertex_shader_text, NULL);
-    glCompileShader(vertex_shader);
+    unsigned int vShader = glCreateShader(GL_VERTEX_SHADER);
+    unsigned int fShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment_shader, 1, &fragment_shader_text, NULL);
-    glCompileShader(fragment_shader);
+    std::string vShaderSource = FileHandler::readFile("C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/vertexShader.glsl");
+    std::string fShaderSource = FileHandler::readFile("C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/fragmentShader.glsl");
+    const char* vShaderCStyle = vShaderSource.c_str();
+    const char* fShaderCStyle = fShaderSource.c_str();
 
-    program = glCreateProgram();
-    glAttachShader(program, vertex_shader);
-    glAttachShader(program, fragment_shader);
+	/*const char* vShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "}\0";*/
+
+    /*const char* fShaderSource = "#version 330 core\n"
+        "out vec4 FragColor;\n"
+        "void main()\n"
+        "{\n"
+			"FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+        "}";p*/
+
+    glShaderSource(vShader, 1,  &vShaderCStyle, NULL);
+    glShaderSource(fShader, 1,  &fShaderCStyle, NULL);
+
+    std::cout << vShaderSource << std::endl;
+    std::cout << fShaderSource << std::endl;
+
+    glCompileShader(vShader);
+    shaderCompilationDebug(vShader);
+    glCompileShader(fShader);
+    shaderCompilationDebug(fShader);
+
+    unsigned int program = glCreateProgram();
+    glAttachShader(program, vShader);
+    glAttachShader(program, fShader);
     glLinkProgram(program);
+    programLinkingDebug(program);
+    glUseProgram(program);
 
-    mvp_location = glGetUniformLocation(program, "MVP");
-    vpos_location = glGetAttribLocation(program, "vPos");
-    vcol_location = glGetAttribLocation(program, "vCol");
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 
-    glEnableVertexAttribArray(vpos_location);
-    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE,
-        sizeof(vertices[0]), (void*)0);
-    glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE,
-        sizeof(vertices[0]), (void*)(sizeof(float) * 2));
-
+    glClearColor(0.f, 0.f, 0.f, 0.f);
     while (!glfwWindowShouldClose(window))
     {
-        float ratio;
-        int width, height;
-        mat4x4 m, p, mvp;
-
-        glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float)height;
-
-        glViewport(0, 0, width, height);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, (float)glfwGetTime());
-        mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
-        mat4x4_mul(mvp, p, m);
-
-        glUseProgram(program);
-        glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)mvp);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        glfwSwapBuffers(window);
         glfwPollEvents();
+        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glfwSwapBuffers(window);
     }
 
     glfwDestroyWindow(window);

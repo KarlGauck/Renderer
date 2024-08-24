@@ -13,6 +13,11 @@ filter({})
 targetdir("Build/Bin/%{prj.name}/%{cfg.longname}")
 objdir("Build/Obj/%{prj.name}/%{cfg.longname}")
 
+
+function includeGLM()
+  includedirs("Libraries/glm")
+end
+
 function includeGLFW()
 	includedirs("Libraries/GLFW/include")
 end
@@ -100,6 +105,7 @@ useStbImage()
 
 includeLinmath()
 
+includeGLM()
 includeGLFW()
 linkGLFW()
 

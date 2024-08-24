@@ -1,6 +1,9 @@
 #include <glad/glad.h>
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
  
 #include <stdlib.h>
 #include <stdio.h>
@@ -149,6 +152,13 @@ int main(void)
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
+
+    glm::mat4 trans = glm::mat4(1.0f);
+    trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
+    trans = glm::scale(trans, glm::vec3(2.5, 2.5, 2.5));
+
+    unsigned int transformLoc = glGetUniformLocation(program, "transform");
+    glUniformMatrix4fv(transformLoc, 1, false, glm::value_ptr(trans));
 
     glClearColor(0.f, 0.f, 0.f, 0.f);
     while (!glfwWindowShouldClose(window))

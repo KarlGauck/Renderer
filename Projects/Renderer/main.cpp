@@ -153,14 +153,24 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
 
-    glm::mat4 trans = glm::mat4(1.0f);
-    trans = glm::rotate(trans, glm::radians(45.0f), glm::vec3(0.0, 0.0, 1.0));
-    trans = glm::scale(trans, glm::vec3(2.5, 2.5, 2.5));
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::rotate(model, glm::radians(-70.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 
-    unsigned int transformLoc = glGetUniformLocation(program, "transform");
-    glUniformMatrix4fv(transformLoc, 1, false, glm::value_ptr(trans));
+    glm::mat4 view = glm::mat4(1.0f);
+    view = glm::translate(view, glm::vec3(0.0f, 0.0f, -3.0f));
+
+    glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
+
+    unsigned int modelLoc = glGetUniformLocation(program, "model");
+	unsigned int viewLoc = glGetUniformLocation(program, "view");
+	unsigned int projectionLoc = glGetUniformLocation(program, "projection");
+
+    glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
+    glUniformMatrix4fv(projectionLoc, 1, false, glm::value_ptr(projection));
 
     glClearColor(0.f, 0.f, 0.f, 0.f);
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();

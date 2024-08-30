@@ -7,5 +7,7 @@ Since I am not that familliar with premake, I used the following Github tutorial
 https://github.com/premake/premake-core/wiki/Tutorial-Premake-example-with-GLFW-and-OpenGL
 
 ## Short term goals
-- Simple Shader abstraction
-- Basic 2D and 3D rendering
+- [x] Simple Shader abstraction
+- [ ] Model abstraction
+- [ ] Camera abstraction
+- [ ] more advanced renderpipeline

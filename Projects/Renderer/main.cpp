@@ -15,6 +15,7 @@
 #include "stb_image.h"
 
 #include "files.h"
+#include "program.h"
  
  
 static void error_callback(int error, const char* description)
@@ -104,31 +105,11 @@ int main(void)
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    unsigned int vShader = glCreateShader(GL_VERTEX_SHADER);
-    unsigned int fShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    std::string vShaderSource = FileHandler::readFile("C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/vertexShader.glsl");
-    std::string fShaderSource = FileHandler::readFile("C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/fragmentShader.glsl");
-    const char* vShaderCStyle = vShaderSource.c_str();
-    const char* fShaderCStyle = fShaderSource.c_str();
-
-    glShaderSource(vShader, 1,  &vShaderCStyle, NULL);
-    glShaderSource(fShader, 1,  &fShaderCStyle, NULL);
-
-    std::cout << vShaderSource << std::endl;
-    std::cout << fShaderSource << std::endl;
-
-    glCompileShader(vShader);
-    shaderCompilationDebug(vShader);
-    glCompileShader(fShader);
-    shaderCompilationDebug(fShader);
-
-    unsigned int program = glCreateProgram();
-    glAttachShader(program, vShader);
-    glAttachShader(program, fShader);
-    glLinkProgram(program);
-    programLinkingDebug(program);
-    glUseProgram(program);
+    ShaderProgram shProgram (
+        "C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/vertexShader.glsl",
+        "C:/Users/kgauc/dev/Renderer/Projects/Renderer/shader/fragmentShader.glsl"
+    );
+    shProgram.use();
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -161,16 +142,12 @@ int main(void)
 
     glm::mat4 projection = glm::perspective(glm::radians(45.0f), 16.0f/9.0f, 0.1f, 100.0f);
 
-    unsigned int modelLoc = glGetUniformLocation(program, "model");
-	unsigned int viewLoc = glGetUniformLocation(program, "view");
-	unsigned int projectionLoc = glGetUniformLocation(program, "projection");
-
-    glUniformMatrix4fv(modelLoc, 1, false, glm::value_ptr(model));
-    glUniformMatrix4fv(viewLoc, 1, false, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLoc, 1, false, glm::value_ptr(projection));
+    shProgram.uniformMatrix4fv("model", model);
+    shProgram.uniformMatrix4fv("view", view);
+    shProgram.uniformMatrix4fv("projection", projection);
 
     glClearColor(0.f, 0.f, 0.f, 0.f);
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);  // THIS LINE DESTROYS EVERYTHING, CURRENTLY NO IDEA WHY
     while (!glfwWindowShouldClose(window))
     {
         glfwPollEvents();

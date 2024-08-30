@@ -115,6 +115,12 @@ links("OpenGL32")
 filter("system: not windows")
 links("GL")
 
+filter("configurations:Debug")
+defines "DEBUG"
+filter("configurations:Release")
+defines "RELEASE"
+
+
 function includeCatch()
 	includedirs("Libraries/Catch/Include")
 	defines("CATCH_CPP11_OR_GREATER")
